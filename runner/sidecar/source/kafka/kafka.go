@@ -103,7 +103,7 @@ func (s *kafkaSource) processMessage(ctx context.Context, msg *kafka.Message) er
 	// add header value to id
 	for _, header := range msg.Headers {
 		if header.Value != nil {
-			Id += fmt.Sprintf("-%s", string(header.Value))
+			Id += fmt.Sprintf("-%s:%s", header.Key, string(header.Value))
 		}
 	}
 
