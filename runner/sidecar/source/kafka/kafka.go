@@ -97,13 +97,23 @@ func New(ctx context.Context, secretInterface corev1.SecretInterface, cluster, n
 
 func (s *kafkaSource) processMessage(ctx context.Context, msg *kafka.Message) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, fmt.Sprintf("kafka-source-%s", s.sourceName))
+
+	Id := fmt.Sprintf("%d-%d", msg.TopicPartition.Partition, msg.TopicPartition.Offset)
+
+	// add header value to id
+	for _, header := range msg.Headers {
+		if header.Value != nil {
+			Id += fmt.Sprintf("-%s:%s", header.Key, string(header.Value))
+		}
+	}
+
 	defer span.Finish()
 	return s.process(
 		dfv1.ContextWithMeta(
 			ctx,
 			dfv1.Meta{
 				Source: s.sourceURN,
-				ID:     fmt.Sprintf("%d-%d", msg.TopicPartition.Partition, msg.TopicPartition.Offset),
+				ID:     Id,
 				Time:   msg.Timestamp.Unix(),
 			},
 		),
